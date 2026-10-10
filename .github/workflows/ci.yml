@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.12", "3.13", "3.14"]
+        include:
+          - os: macos-latest
+            python: "3.12"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.11.29"
+          enable-cache: true
+      - run: uv sync --locked --all-packages --python '${{ matrix.python }}'
+      - name: Formatting and lint
+        run: |
+          uv run --locked --all-packages black --check .
+          uv run --locked --all-packages isort --check-only .
+          uv run --locked --all-packages ruff check .
+      - run: uv run --locked --all-packages pyright
+      - run: uv run --locked --all-packages bandit -c pyproject.toml -r packages servers
+      - run: uv run --locked --all-packages pytest --cov --cov-report=term-missing
+      - run: uv build --all-packages --no-sources
+      - name: Test installed wheels outside the workspace
+        shell: bash
+        run: |
+          uv venv --python '${{ matrix.python }}' "$RUNNER_TEMP/wheel-test"
+          uv pip install --python "$RUNNER_TEMP/wheel-test/bin/python" \
+            dist/*.whl 'pytest>=9,<10' 'pytest-timeout>=2.4,<3'
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/wheel-test/bin/python" -m pytest \
+            -c "$GITHUB_WORKSPACE/pyproject.toml" \
+            "$GITHUB_WORKSPACE/packages" "$GITHUB_WORKSPACE/servers"

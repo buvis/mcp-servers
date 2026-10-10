@@ -1,0 +1,46 @@
+[tools]
+python = "3.12"
+uv = "0.11.29"
+
+[settings]
+task.run_auto_install = false
+# Tool resolution happens before task code can handle --sync.
+offline = true
+
+[env]
+_.path = ["tools"]
+
+[tasks.onboard]
+description = "Install the toolchain and workspace; --sync checks installed local prerequisites"
+run = "./tools/lib/onboard"
+
+[tasks.check]
+description = "Run formatting, lint, types, security, and tests"
+run = [
+    "uv run --locked --all-packages black --check .",
+    "uv run --locked --all-packages isort --check-only .",
+    "uv run --locked --all-packages ruff check .",
+    "uv run --locked --all-packages pyright",
+    "uv run --locked --all-packages bandit -c pyproject.toml -r packages servers",
+    "uv run --locked --all-packages pytest --cov --cov-report=term-missing",
+]
+
+[tasks.build]
+description = "Build all workspace wheels and source distributions"
+run = "uv build --all-packages --no-sources"
+
+[tasks.format]
+description = "Apply import ordering and Python formatting"
+run = [
+    "uv run --locked --all-packages isort .",
+    "uv run --locked --all-packages black .",
+]
+
+[tasks.run-tests]
+description = "Run tests; forwards pytest paths and selectors"
+run = "uv run --locked --all-packages pytest"
+
+[tasks.develop]
+description = "Run the reference MCP server on stdio"
+raw = true
+run = "uv run --locked --package buvis-mcp-example buvis-mcp-example"

@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+
+usage() {
+    printf '%s\n' 'Usage: onboard [--sync]' \
+        'Without arguments: install mise tools and sync locked workspace dependencies.' \
+        '--sync: check installed tooling only; no local integrations are configured.'
+}
+
+if [ "$#" -gt 1 ]; then
+    usage >&2
+    exit 2
+fi
+
+case "${1-}" in
+    '')
+        for tool in python uv; do
+            if ! mise which "$tool" >/dev/null 2>&1; then
+                MISE_OFFLINE=false mise install "$tool"
+            fi
+        done
+        exec mise exec python uv -- uv sync --locked --all-packages --python "$(mise which python)"
+        ;;
+    --sync)
+        mise which python >/dev/null
+        mise which uv >/dev/null
+        printf '%s\n' 'Installed prerequisites available; no local integrations to synchronize.'
+        ;;
+    --help|-h)
+        usage
+        ;;
+    *)
+        usage >&2
+        exit 2
+        ;;
+esac

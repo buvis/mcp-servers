@@ -1,0 +1,72 @@
+[project]
+name = "buvis-mcp-servers"
+version = "0.1.0"
+description = "Development workspace for buvis MCP servers."
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
+required-version = ">=0.11.29"
+
+[tool.uv.workspace]
+members = ["packages/*", "servers/*"]
+
+[tool.uv.sources]
+buvis-mcp-core = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "anyio>=4.12,<5",
+    "bandit>=1.9,<2",
+    "black>=26,<27",
+    "isort>=6,<7",
+    "pyright>=1.1.400,<2",
+    "pytest>=9,<10",
+    "pytest-cov>=7,<8",
+    "pytest-timeout>=2.4,<3",
+    "ruff>=0.14,<1",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+src_paths = ["packages/core/src", "servers/example/src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "ANN", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["buvis_mcp_core", "buvis_mcp_example"]
+
+[tool.pyright]
+include = ["packages", "servers"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+testpaths = ["packages", "servers"]
+addopts = "--import-mode=importlib --strict-config --strict-markers"
+timeout = 30
+
+[tool.coverage.run]
+source = ["packages/core/src", "servers/example/src"]
+branch = true
+patch = ["subprocess"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 90
+
+[tool.bandit]
+exclude_dirs = ["packages/core/tests", "servers/example/tests"]

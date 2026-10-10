@@ -1,0 +1,14 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "buvis-mcp-core"
+version = "0.1.0"
+description = "Shared runtime conventions for buvis MCP servers."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["mcp>=2.3,<3"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/buvis_mcp_core"]

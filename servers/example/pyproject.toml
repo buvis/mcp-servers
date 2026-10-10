@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "buvis-mcp-example"
+version = "0.1.0"
+description = "Minimal reference server for the buvis MCP workspace."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["buvis-mcp-core>=0.1,<0.2", "mcp>=2.3,<3"]
+
+[project.scripts]
+buvis-mcp-example = "buvis_mcp_example.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/buvis_mcp_example"]
